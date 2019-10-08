@@ -8,7 +8,6 @@ using System.IO;
 using GitHubWebHookApi.Models;
 using Newtonsoft.Json;
 using System.Net.Http;
-using GitHubWebHookApi.Models.MYDelegate;
 
 namespace GitHubWebHookApi.Controllers
 {
@@ -34,39 +33,36 @@ namespace GitHubWebHookApi.Controllers
         [HttpPost]
         public void Post(GitHubPayLoad payload)
         {
-            string pullCommentUrl = payload.pull_request.review_comments_url;
+            string pullCommentUrl = payload.Pull_request.Review_comments_url;
             ProcessWebHookPayloadAsync(pullCommentUrl).Wait();
             
         }
 
         private async Task ProcessWebHookPayloadAsync(string pullCommentUrl)
         {
-            using (HttpClient client = new HttpClient())
+            using HttpClient client = new HttpClient();
+            client.BaseAddress = new Uri("https://api.github.com");
+            var token = "af87ff7a081c09c98577eb8e1da658802d9d10b1";
+            client.DefaultRequestHeaders.UserAgent.Add(new System.Net.Http.Headers.ProductInfoHeaderValue("AppName", "1.0"));
+            client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
+            client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Token", token);
+
+            var response = await client.GetAsync("repos/tavisca-vshah/hello/pulls/1/comments");
+            string data = "";
+            if (response.IsSuccessStatusCode)
             {
-
-                client.BaseAddress = new Uri("https://api.github.com");
-                var token = "ea1ce4f2d92e3bc15ecfef2088f181cf7e8b1a5e";
-                client.DefaultRequestHeaders.UserAgent.Add(new System.Net.Http.Headers.ProductInfoHeaderValue("AppName", "1.0"));
-                client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
-                client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Token", token);
-
-                var response = await client.GetAsync("repos/tavisca-vshah/hello/pulls/1/comments");
-                string data = "";
-                if (response.IsSuccessStatusCode)
-                {
-                    var responseString = await response.Content.ReadAsStringAsync();
-                    var comments = JsonConvert.DeserializeObject<IEnumerable<Comment>>(responseString).ToList<Comment>();
-                    comments.ForEach(c => data += c.user.login + "\n" + c.body + "\n");
-                    data += $"Total Comments: {comments.Count}\n\n";
-                }
-                else
-                {
-                    data = $"Error In Fetching Data fro api call {response.ReasonPhrase}";
-                    data += $"Total Comments: 0\n\n";
-                }
-
-                System.IO.File.WriteAllText(@"C:\Users\vshah\source\repos\GitHubWebHookApi\GitHubWebHookApi\response.txt", data);
+                var responseString = await response.Content.ReadAsStringAsync();
+                var comments = JsonConvert.DeserializeObject<IEnumerable<CommentPayload>>(responseString).ToList<CommentPayload>();
+                comments.ForEach(c => data += c.User.Login + "\n" + c.Body + "\n");
+                data += $"Total Comments: {comments.Count}\n\n";
             }
+            else
+            {
+                data = $"Error In Fetching Data fro api call {response.ReasonPhrase}";
+                data += $"Total Comments: 0\n\n";
+            }
+
+            System.IO.File.WriteAllText(@"C:\Users\vshah\Desktop\sampleWebhook\GitHubWebHookApi\GitHubWebHookApi\response.txt", data);
         }
 
         // PUT: api/GitHubWebHook/5
