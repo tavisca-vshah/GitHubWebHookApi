@@ -42,12 +42,12 @@ namespace GitHubWebHookApi.Controllers
         {
             using HttpClient client = new HttpClient();
             client.BaseAddress = new Uri("https://api.github.com");
-            var token = "af87ff7a081c09c98577eb8e1da658802d9d10b1";
+            var token = "54d781fdef81faae6aa8e134c2fad67e8b39d4d9";
             client.DefaultRequestHeaders.UserAgent.Add(new System.Net.Http.Headers.ProductInfoHeaderValue("AppName", "1.0"));
             client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
             client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Token", token);
 
-            var response = await client.GetAsync("repos/tavisca-vshah/hello/pulls/1/comments");
+            var response = await client.GetAsync(new Uri(pullCommentUrl).LocalPath);
             string data = "";
             if (response.IsSuccessStatusCode)
             {
